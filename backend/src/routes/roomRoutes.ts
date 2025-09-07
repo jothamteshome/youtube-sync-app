@@ -6,11 +6,11 @@ const router = Router();
 
 router.post("/create-room", (req, res) => {
   const roomId = uuidv4();
-  const { videoUrl } = req.body;
+  const { videoId } = req.body;
 
   rooms.set(roomId,
     {
-      videoUrl: videoUrl || null,
+      videoId: videoId || null,
       currentTime: 0,
       isPlaying: false,
       users: {}

@@ -3,6 +3,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import roomRoutes from "./routes/roomRoutes.js";
 import socketEventHandler from "./sockets/eventHandler.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);

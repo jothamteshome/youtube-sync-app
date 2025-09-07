@@ -1,5 +1,5 @@
 export interface RoomState {
-    videoUrl?: string;
+    videoId?: string;
     currentTime: number;
     isPlaying: boolean;
     users: Record<string, boolean>;
