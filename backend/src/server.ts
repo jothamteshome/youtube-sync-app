@@ -1,0 +1,27 @@
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import roomRoutes from "./routes/roomRoutes.js";
+import socketEventHandler from "./sockets/eventHandler.js";
+
+const app = express();
+const httpServer = createServer(app);
+
+export const io = new Server(httpServer, { cors: { origin: "*" } });
+
+// Middleware
+app.use(express.json());
+
+// Routes
+app.use("/rooms", roomRoutes);
+
+// Socket.IO events
+io.on("connection", (socket) => { socketEventHandler(io, socket); });
+
+const PORT = process.env.PORT || (process.env.NODE_ENV === "development" ? 4000 : undefined);
+
+if (!PORT) {
+  throw new Error("PORT not set in production!");
+}
+
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
