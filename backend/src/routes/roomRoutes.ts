@@ -1,20 +1,20 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { rooms, type RoomState } from "../models/roomState.js";
+import { rooms } from "../models/roomState.js";
 
 const router = Router();
 
 router.post("/create-room", (req, res) => {
   const roomId = uuidv4();
-  const { videoId } = req.body;
+  const { videoUrl } = req.body;
 
   rooms.set(roomId,
     {
-      videoId: videoId || null,
-      currentTime: 0,
-      isPlaying: false,
-      users: {}
-    } as RoomState
+    videoUrl,
+    currentTime: 0,
+    isPlaying: false,
+    lastUpdate: Date.now()
+    }
   );
 
   res.json({ roomId });
