@@ -4,12 +4,15 @@ import { Server } from "socket.io";
 import roomRoutes from "./routes/roomRoutes.js";
 import socketEventHandler from "./sockets/eventHandler.js";
 import dotenv from 'dotenv';
+import cors from 'cors';
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
 export const io = new Server(httpServer, { cors: { origin: "*" } });
+
+app.use(cors());
 
 // Middleware
 app.use(express.json());

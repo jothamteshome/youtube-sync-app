@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { rooms } from "../models/roomState.js";
+import { rooms, type ClientRoomState } from "../models/roomState.js";
 import type { VideoEvent } from "../models/videoEvent.js";
 
 
@@ -8,7 +8,9 @@ import type { VideoEvent } from "../models/videoEvent.js";
  * @param socket The current socket
  * @param roomId The current roomId to handle join events for
  */
-function joinRoom(socket: Socket, roomId: string) {
+function joinRoom(socket: Socket, roomId: string, eventProcessedCount: number) {
+  if (eventProcessedCount > 1) return;
+
   // Join the room
   socket.join(roomId);
 
@@ -27,8 +29,15 @@ function joinRoom(socket: Socket, roomId: string) {
   // Update room's user list
   room.users[socket.id] = true;
 
+  const clientRoomState: ClientRoomState = {
+    videoId: room.videoId,
+    currentTime: room.currentTime,
+    isPlaying: room.isPlaying,
+    eventProcessedCount: eventProcessedCount + 1
+  };
+
   // Sync current room state with user
-  socket.emit("video:sync", room);
+  socket.emit("video:sync", clientRoomState);
 }
 
 
@@ -39,7 +48,9 @@ function joinRoom(socket: Socket, roomId: string) {
  * @param videoEvent.event    The event type being processed
  * @param videoEvent.time     The timestamp to set the video to
  */
-function handleVideoEvent(socket: Socket, { roomId, event, time }: VideoEvent) {
+function handleVideoEvent(socket: Socket, { roomId, event, time, eventProcessedCount }: VideoEvent) {
+  if (eventProcessedCount > 1) return;
+
   // Get the current room
   const room = rooms.get(roomId);
 
@@ -55,8 +66,30 @@ function handleVideoEvent(socket: Socket, { roomId, event, time }: VideoEvent) {
 
   
   // Broadcast video event state to other users in room
-  console.log(`Broadcasting video:${event} in room ${roomId} at time ${time}`);
-  socket.to(roomId).emit(`video:${event}`, { time });
+  console.log(`${socket.id} is broadcasting video:${event} in room ${roomId} at time ${time}`);
+  socket.to(roomId).emit(`video:${event}`, { time, eventProcessedCount: eventProcessedCount + 1 });
+}
+
+
+function handleSetVideo(socket: Socket, { roomId, videoId, eventProcessedCount }: { roomId: string, videoId: string, eventProcessedCount: number }) {
+  console.log('Setting video');
+
+  if (eventProcessedCount > 1) return;
+
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  room.videoId = videoId;
+
+  const clientRoomState: ClientRoomState = {
+    videoId: room.videoId,
+    currentTime: room.currentTime,
+    isPlaying: room.isPlaying,
+    eventProcessedCount: eventProcessedCount + 1
+  };
+
+  // Broadcast the new videoId to all users including sender
+  socket.to(roomId).emit("video:sync", clientRoomState);
 }
 
 
@@ -105,12 +138,13 @@ export default function socketEventHandler(io: Server, socket: Socket) {
   console.log("New client connected:", socket.id);
 
   // Join room
-  socket.on("video:join", ({ roomId }: { roomId: string }) => joinRoom(socket, roomId));
+  socket.on("video:join", ({ roomId, eventProcessedCount }: { roomId: string, eventProcessedCount: number }) => joinRoom(socket, roomId, eventProcessedCount));
 
   // Video events
-  socket.on("video:play", ({ roomId, time }: { roomId: string; time: number }) => handleVideoEvent(socket, { roomId, event: "play", time }));
-  socket.on("video:pause", ({ roomId, time }: { roomId: string; time: number }) => handleVideoEvent(socket, { roomId, event: "pause", time }));
-  socket.on("video:seek", ({ roomId, time }: { roomId: string; time: number }) => handleVideoEvent(socket, { roomId, event: "seek", time }));
+  socket.on("video:set", ({ roomId, videoId, eventProcessedCount }: { roomId: string, videoId: string, eventProcessedCount: number }) => handleSetVideo(socket, { roomId, videoId, eventProcessedCount }));
+  socket.on("video:play", ({ roomId, time, eventProcessedCount }: { roomId: string; time: number, eventProcessedCount: number }) => handleVideoEvent(socket, { roomId, event: "play", time, eventProcessedCount }));
+  socket.on("video:pause", ({ roomId, time, eventProcessedCount }: { roomId: string; time: number, eventProcessedCount: number }) => handleVideoEvent(socket, { roomId, event: "pause", time, eventProcessedCount }));
+  socket.on("video:seek", ({ roomId, time, eventProcessedCount }: { roomId: string; time: number, eventProcessedCount: number }) => handleVideoEvent(socket, { roomId, event: "seek", time, eventProcessedCount }));
 
   // Disconnect
   socket.on("disconnect", () => disconnect(socket));
