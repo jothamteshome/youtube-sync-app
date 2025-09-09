@@ -22,20 +22,9 @@ export default function RoomPage() {
   const handleLoadVideo = () => {
     if (!roomId || !roomManagerRef.current) return;
 
-    const videoId = extractYouTubeId(url);
-    if (!videoId) {
-      alert("Invalid YouTube URL");
-      return;
-    }
-
-    roomManagerRef.current.loadVideo(videoId);
+    roomManagerRef.current.loadVideo(url);
   };
 
-  const extractYouTubeId = (url: string): string | null => {
-    const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  };
 
   return (
     <div className="w-full h-full flex flex-col items-center">

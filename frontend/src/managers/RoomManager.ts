@@ -1,5 +1,6 @@
 import { socket } from "../services/socket";
 import { YoutubeManager } from "./YoutubeManager";
+import { extractYouTubeId } from "../utils/youtube";
 
 export class RoomManager {
   private roomId: string;
@@ -12,12 +13,17 @@ export class RoomManager {
     this.youtubeManager.initPlayer("yt-player");
   }
 
-  loadVideo(videoId: string) {
+  loadVideo(videoUrl: string) {
     if (!this.youtubeManager) return;
 
-    this.youtubeManager.setVideo(videoId);
-    console.log("Video ID:", videoId)
-    socket.emit("video:set", { roomId: this.roomId, videoId, eventProcessedCount: 0 });
+    const videoId = extractYouTubeId(videoUrl);
+
+    if (!videoId) {
+      alert("Invalid YouTube URL");
+      return;
+    }
+
+    socket.emit("video:set", { roomId: this.roomId, videoUrl });
   }
 
   destroy() {
