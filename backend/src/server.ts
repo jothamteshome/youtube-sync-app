@@ -23,7 +23,7 @@ app.use("/rooms", roomRoutes);
 // Socket.IO events
 io.on("connection", (socket) => { socketEventHandler(io, socket); });
 
-const PORT = process.env.PORT || (process.env.NODE_ENV === "development" ? 4000 : undefined);
+const PORT = process.env.PORT;
 
 if (!PORT) {
   throw new Error("PORT not set in production!");
