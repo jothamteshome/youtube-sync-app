@@ -1,4 +1,4 @@
-interface RoomState {
+export interface RoomState {
   videoUrl: string | null;
   currentTime: number;
   isPlaying: boolean;

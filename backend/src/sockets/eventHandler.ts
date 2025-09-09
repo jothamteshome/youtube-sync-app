@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { rooms } from "../models/roomState.js";
+import { rooms, type RoomState } from "../models/roomState.js";
 import { roomUsers } from "../models/roomUsers.js";
 import type { VideoEvent } from "../models/videoEvent.js";
 
@@ -28,16 +28,27 @@ function joinRoom(socket: Socket, roomId: string) {
     return;
   }
 
+  // Construct new state
+  const newState: RoomState = {
+    videoUrl: state?.videoUrl,
+    currentTime: state.currentTime + (Date.now() - state.lastUpdate) / 1000,
+    isPlaying: state.isPlaying,
+    lastUpdate: Date.now()
+  };
+
+  // Set new state
+  rooms.set(roomId, newState);
+
   // Sync client
-  socket.emit("video:sync", state);
+  socket.emit("video:sync", newState);
 }
 
 
 /**
  * Handle video set events from socket.IO
- * @param io                  The server instance handling events
- * @param videoEvent.roomId   The current roomId to handle events for
- * @param videoEvent.videoUrl  The id of the new video
+ * @param io                    The server instance handling events
+ * @param videoEvent.roomId     The current roomId to handle events for
+ * @param videoEvent.videoUrl   The id of the new video
  */
 function handleSetVideo(io: Server, { roomId, videoUrl }: { roomId: string, videoUrl: string }) {
   console.log(`Setting video: ${videoUrl} in ${roomId}`);
@@ -45,10 +56,10 @@ function handleSetVideo(io: Server, { roomId, videoUrl }: { roomId: string, vide
   // Update room state with new video
   rooms.set(roomId,
     {
-    videoUrl,
-    currentTime: 0,
-    isPlaying: false,
-    lastUpdate: Date.now()
+      videoUrl,
+      currentTime: 0,
+      isPlaying: true,
+      lastUpdate: Date.now()
     }
   );
 
@@ -145,7 +156,7 @@ function disconnect(socket: Socket) {
   const userRooms = Array.from(socket.rooms).filter(r => r !== socket.id);
 
   // Run cleanup function for each room in socket
-  userRooms.forEach(roomId => disconnectCleanup(socket, roomId));  
+  userRooms.forEach(roomId => disconnectCleanup(socket, roomId));
 }
 
 
