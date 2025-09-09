@@ -19,7 +19,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/v1/rooms", roomRoutes);
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).send("OK");
 })
 
