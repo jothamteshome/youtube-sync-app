@@ -19,6 +19,10 @@ app.use(express.json());
 
 // Routes
 app.use("/api/v1/rooms", roomRoutes);
+app.get('/health', (req, res) => {
+  res.status(200).send("OK");
+})
+
 
 // Socket.IO events
 io.on("connection", (socket) => { socketEventHandler(io, socket); });
