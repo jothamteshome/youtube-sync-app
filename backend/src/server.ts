@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/rooms", roomRoutes);
+app.use("/api/v1/rooms", roomRoutes);
 
 // Socket.IO events
 io.on("connection", (socket) => { socketEventHandler(io, socket); });
