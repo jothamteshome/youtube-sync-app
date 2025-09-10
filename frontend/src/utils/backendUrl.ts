@@ -1,1 +1,1 @@
-export const BACKEND_URL = "https://youtube-sync.whymighta.net";
+export const BACKEND_URL = "https://watch-together.whymighta.net";
