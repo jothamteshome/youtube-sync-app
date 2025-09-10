@@ -1,0 +1,1 @@
+export const BACKEND_URL = "https://youtube-sync.whymighta.net";
