@@ -10,7 +10,7 @@ export default function RoomInfo({ roomId }: { roomId: string }) {
     const ping = async () => {
       const start = Date.now();
       try {
-        await fetch("/api/health");
+        await fetch("/health");
         setLatency(Date.now() - start);
       } catch {
         setLatency(null);

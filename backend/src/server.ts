@@ -12,7 +12,7 @@ const app = express();
 const httpServer = createServer(app);
 
 export const io = new Server(httpServer, { 
-  path: "/api/v1/socket-io",
+  path: "/v1/socket-io",
   cors: { origin: "*" } 
 });
 
@@ -22,8 +22,8 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/v1/rooms", roomRoutes);
-app.get('/api/health', (req, res) => {
+app.use("/v1/rooms", roomRoutes);
+app.get('/health', (req, res) => {
   console.log(`[${getFormattedDate()}] health check - OK`);
   res.status(200).send("OK");
 });
