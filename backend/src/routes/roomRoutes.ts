@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { rooms } from "../models/roomState.js";
+import getFormattedDate from "../utils/date.js";
 
 const router = Router();
 
 router.post("/create-room", (req, res) => {
+  console.log(`[${getFormattedDate()}] creating room`);
   const roomId = uuidv4();
   const { videoUrl } = req.body;
 

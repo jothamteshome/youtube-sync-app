@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import roomRoutes from "./routes/roomRoutes.js";
 import socketEventHandler from "./sockets/eventHandler.js";
+import getFormattedDate from "./utils/date.js";
 import dotenv from 'dotenv';
 import cors from 'cors';
 dotenv.config();
@@ -20,8 +21,9 @@ app.use(express.json());
 // Routes
 app.use("/api/v1/rooms", roomRoutes);
 app.get('/api/health', (req, res) => {
+  console.log(`[${getFormattedDate()}] health check - OK`);
   res.status(200).send("OK");
-})
+});
 
 
 // Socket.IO events
