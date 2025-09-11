@@ -11,14 +11,14 @@ declare global {
 export class YoutubeManager {
     private player: YT.Player | null = null;
     private roomId: string;
-    private isInitialSync: boolean = true;
+    private eventId: number = -1;
     readonly driftThreshold: number = 0.5;
 
     constructor(roomId: string) {
         this.roomId = roomId;
 
         // Sync events from server
-        socket.on("video:sync", ({ videoUrl, currentTime, isPlaying, lastUpdate }) => this.videoSyncHandler(videoUrl, currentTime, isPlaying, lastUpdate));
+        socket.on("video:sync", ({ videoUrl, currentTime, isPlaying, lastUpdate, eventId }) => this.videoSyncHandler(videoUrl, currentTime, isPlaying, lastUpdate, eventId));
     }
 
     destroy() {
@@ -27,8 +27,14 @@ export class YoutubeManager {
         this.player = null;
     }
 
-    private videoSyncHandler(videoUrl: string, currentTime: number, isPlaying: boolean, lastUpdate: number) {
+    private videoSyncHandler(videoUrl: string, currentTime: number, isPlaying: boolean, lastUpdate: number, eventId: number) {
         if (!this.player) return;
+
+        // Ignore sync events if the eventId is less than or equal to what is known to the client
+        if (this.eventId >= eventId) return;
+        
+        // Update this.eventId
+        this.eventId = eventId;
 
         // Set new videoId from youtube video url
         const videoId = extractYouTubeId(videoUrl);
@@ -72,18 +78,13 @@ export class YoutubeManager {
     }
 
     private onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
-        if (this.isInitialSync) {
-            this.isInitialSync = false;
-            return;
-        }
-
         const player = event.target;
         const time = player.getCurrentTime();
 
         if (event.data === YT.PlayerState.PLAYING) {
-            socket.emit("video:play", { roomId: this.roomId, time });
+            socket.emit("video:play", { roomId: this.roomId, time, eventId: this.eventId });
         } else if (event.data === YT.PlayerState.PAUSED) {
-            socket.emit("video:pause", { roomId: this.roomId, time });
+            socket.emit("video:pause", { roomId: this.roomId, time, eventId: this.eventId });
         }
         // else if (event.data === YT.PlayerState.BUFFERING && player.getVideoLoadedFraction() < 1) {
         //     socket.emit("video:seek", { roomId: this.roomId, time });

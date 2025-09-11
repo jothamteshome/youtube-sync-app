@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { RoomManager } from "../managers/RoomManager";
-import SearchBar from "../components/SearchBar";
-import { YoutubeFrame } from "../components/YoutubeFrame";
-import RoomInfo from "../components/RoomInfo";
+import SearchBar from "../components/room/SearchBar";
+import { YoutubeFrame } from "../components/room/YoutubeFrame";
+import RoomInfo from "../components/room/RoomInfo";
 
 export default function RoomPage() {
   const params = useParams();
