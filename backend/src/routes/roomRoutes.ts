@@ -12,10 +12,11 @@ router.post("/create-room", (req, res) => {
 
   rooms.set(roomId,
     {
-    videoUrl,
-    currentTime: 0,
-    isPlaying: false,
-    lastUpdate: Date.now()
+      eventId: 0,
+      videoUrl,
+      currentTime: 0,
+      isPlaying: false,
+      lastUpdate: Date.now()
     }
   );
 
@@ -26,8 +27,8 @@ router.post("/create-room", (req, res) => {
 router.get("/:roomId", (req, res) => {
   const { roomId } = req.params;
 
-  if ( rooms.has(roomId) ) {
-    res.json(rooms.get(roomId));
+  if (rooms.has(roomId)) {
+    res.status(200).json(rooms.get(roomId));
   } else {
     res.status(404).json({ error: "Room not found" });
   }
