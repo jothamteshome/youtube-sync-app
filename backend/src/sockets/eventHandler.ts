@@ -10,7 +10,10 @@ import type { VideoEvent } from "../models/videoEvent.js";
  * @param roomId The current roomId to handle join events for
  */
 function joinRoom(socket: Socket, roomId: string) {
-  if (!roomUsers[roomId]) roomUsers[roomId] = new Set();
+  // Initialize roomUsers set if missing
+  if (!roomUsers[roomId]) { 
+    roomUsers[roomId] = new Set(); 
+  };
   roomUsers[roomId].add(socket.id);
 
   // Join the room
@@ -178,11 +181,10 @@ function handleSeekVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
 function disconnect(socket: Socket) {
   console.log("User disconnected:", socket.id);
 
-  // Get list of rooms for the current socket
-  const userRooms = Array.from(socket.rooms).filter(r => r !== socket.id);
-
   // Run cleanup function for each room in socket
-  userRooms.forEach(roomId => disconnectCleanup(socket, roomId));
+  for (const [roomId, userSet] of Object.entries(roomUsers)) {
+    disconnectCleanup(socket, roomId, userSet);
+  }
 }
 
 
@@ -191,9 +193,9 @@ function disconnect(socket: Socket) {
  * @param socket The current socket being disconnected from
  * @param roomId The current roomId to remove the socket from
  */
-function disconnectCleanup(socket: Socket, roomId: string) {
+function disconnectCleanup(socket: Socket, roomId: string, userSet: Set<string>) {
   // Get set of users in room
-  const currentRoomUsers = roomUsers[roomId];
+  const currentRoomUsers = userSet;
 
   // If room doesn't exist, return
   if (!currentRoomUsers) return;
@@ -207,6 +209,7 @@ function disconnectCleanup(socket: Socket, roomId: string) {
   // If users list for room is empty, delete room entirely
   if (currentRoomUsers.size === 0) {
     delete roomUsers[roomId];
+    rooms.delete(roomId);
     console.log(`Room ${roomId} deleted because it is empty`);
   }
 }
