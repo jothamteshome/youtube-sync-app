@@ -96,25 +96,15 @@ function handlePlayVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   // Ignore sync events if the eventId is less than or equal to what is known to the server
   if (room.eventId > eventId) return;
 
-  const oldLastUpdate = room.lastUpdate;
-
   // Update room's state on server
   room.eventId++;
   room.currentTime = time;
   room.isPlaying = true;
   room.lastUpdate = Date.now();
 
-
-  // compute currentTime as of now
-  const currentTimeNow = room.currentTime + (Date.now() - oldLastUpdate) / 1000;
-
-
   console.log(`Broadcasting video:play in room ${roomId} at time ${time}`);
   console.log(room);
-  io.to(roomId).emit("video:sync", {
-    ...room,
-    currentTime: currentTimeNow
-  });
+  io.to(roomId).emit("video:sync", room);
 }
 
 
