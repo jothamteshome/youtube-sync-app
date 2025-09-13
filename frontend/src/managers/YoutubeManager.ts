@@ -18,7 +18,7 @@ export class YoutubeManager {
         this.roomId = roomId;
 
         // Sync events from server
-        socket.on("video:sync", ({ videoUrl, currentTime, isPlaying, lastUpdate, eventId }) => this.videoSyncHandler(videoUrl, currentTime, isPlaying, lastUpdate, eventId));
+        socket.on("video:sync", ({ videoUrl, currentTime, isPlaying, eventId }) => this.videoSyncHandler(videoUrl, currentTime, isPlaying, eventId));
     }
 
     destroy() {
@@ -27,7 +27,7 @@ export class YoutubeManager {
         this.player = null;
     }
 
-    private videoSyncHandler(videoUrl: string, currentTime: number, isPlaying: boolean, lastUpdate: number, eventId: number) {
+    private videoSyncHandler(videoUrl: string, currentTime: number, isPlaying: boolean, eventId: number) {
         if (!this.player) return;
 
         // Ignore sync events if the eventId is less than or equal to what is known to the client
