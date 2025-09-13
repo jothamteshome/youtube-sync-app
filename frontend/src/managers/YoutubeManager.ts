@@ -46,16 +46,10 @@ export class YoutubeManager {
             return;
         }
 
-        // Calculate drift
-        let targetTime = currentTime;
-        if (isPlaying) {
-            const elapsed = (Date.now() - lastUpdate) / 1000;
-            targetTime += elapsed;
-        }
 
-        const drift = Math.abs(this.player.getCurrentTime() - targetTime);
+        const drift = Math.abs(this.player.getCurrentTime() - currentTime);
         if (drift > this.driftThreshold) {
-            this.player.seekTo(targetTime, true);
+            this.player.seekTo(currentTime, true);
         }
 
         if (isPlaying && this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
