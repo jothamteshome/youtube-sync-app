@@ -12,7 +12,6 @@ router.post("/create-room", (req, res) => {
 
   rooms.set(roomId,
     {
-      eventId: 0,
       videoUrl,
       currentTime: 0,
       isPlaying: false,

@@ -1,5 +1,4 @@
 export interface RoomState {
-  eventId: number;
   videoUrl: string | null;
   currentTime: number;
   isPlaying: boolean;

@@ -1,1 +1,1 @@
-export const BACKEND_URL = "https://api.watch-together.whymighta.net";
+export const BACKEND_URL = "http://localhost:4000" //"https://api.watch-together.whymighta.net";

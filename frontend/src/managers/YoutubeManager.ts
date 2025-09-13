@@ -1,4 +1,5 @@
 import { socket } from "../services/socket";
+import { BaseVideoManager, type VideoState } from "./BaseVideoManager";
 import { extractYouTubeId } from "../utils/youtube";
 
 declare global {
@@ -8,95 +9,15 @@ declare global {
     }
 }
 
-export class YoutubeManager {
+export class YoutubeManager extends BaseVideoManager {
     private player: YT.Player | null = null;
-    private roomId: string;
-    private eventId: number = -1;
-    readonly driftThreshold: number = 0.5;
-
-    constructor(roomId: string) {
-        this.roomId = roomId;
-
-        // Sync events from server
-        socket.on("video:sync", ({ videoUrl, currentTime, isPlaying, lastUpdate, eventId }) => this.videoSyncHandler(videoUrl, currentTime, isPlaying, lastUpdate, eventId));
-    }
-
-    destroy() {
-        socket.off("video:sync");
-        this.player?.destroy();
-        this.player = null;
-    }
-
-    private videoSyncHandler(videoUrl: string, currentTime: number, isPlaying: boolean, lastUpdate: number, eventId: number) {
-        if (!this.player) return;
-
-        // Ignore sync events if the eventId is less than or equal to what is known to the client
-        if (this.eventId >= eventId) return;
-        
-        // Update this.eventId
-        this.eventId = eventId;
-
-        // Set new videoId from youtube video url
-        const videoId = extractYouTubeId(videoUrl);
-        if (!videoId) return;
-
-        // If video changed
-        if (this.player.getVideoData()?.video_id !== videoId) {
-            this.player.loadVideoById(videoId, currentTime);
-            return;
-        }
-
-        // Calculate drift
-        let targetTime = currentTime;
-        if (isPlaying) {
-            const elapsed = (Date.now() - lastUpdate) / 1000;
-            targetTime += elapsed;
-        }
-
-        const drift = Math.abs(this.player.getCurrentTime() - targetTime);
-        if (drift > this.driftThreshold) {
-            this.player.seekTo(targetTime, true);
-        }
-
-        if (isPlaying && this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
-            this.player.playVideo();
-        } else if (!isPlaying && this.player.getPlayerState() !== YT.PlayerState.PAUSED) {
-            this.player.pauseVideo();
-        }
-    }
-
-    private onPlayerReady = () => {
-        // Join room
-        if (!socket.connected) {
-            socket.connect();
-            socket.once("connect", () => {
-                socket.emit("video:join", { roomId: this.roomId });
-            });
-        } else {
-            socket.emit("video:join", { roomId: this.roomId });
-        }
-    }
-
-    private onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
-        const player = event.target;
-        const time = player.getCurrentTime();
-
-        if (event.data === YT.PlayerState.PLAYING) {
-            socket.emit("video:play", { roomId: this.roomId, time, eventId: this.eventId });
-        } else if (event.data === YT.PlayerState.PAUSED) {
-            socket.emit("video:pause", { roomId: this.roomId, time, eventId: this.eventId });
-        }
-        // else if (event.data === YT.PlayerState.BUFFERING && player.getVideoLoadedFraction() < 1) {
-        //     socket.emit("video:seek", { roomId: this.roomId, time });
-        // }
-    }
 
     initPlayer(containerId = "yt-player") {
         const init = () => {
             if (this.player) return;
 
             this.player = new window.YT.Player(containerId, {
-                playerVars: { playsinline: 1 },
+                playerVars: { controls: 0, modestbranding: 1, rel: 0, autoplay: 1 },
                 events: {
                     onReady: this.onPlayerReady,
                     onStateChange: this.onPlayerStateChange,
@@ -115,5 +36,87 @@ export class YoutubeManager {
         } else {
             init();
         }
+    };
+
+    destroy() {
+        this.player?.destroy();
+        this.player = null;
+    };
+
+    getCurrentTime() {
+        return this.player?.getCurrentTime() ?? 0;
+    };
+
+    getDuration() {
+        return this.player?.getDuration() ?? 0;
+    };
+
+    play() {
+        this.player?.playVideo();
+    };
+
+    pause() {
+        this.player?.pauseVideo();
+    };
+
+    seek(time: number) {
+        this.player?.seekTo(time, true);
+    };
+
+    isPlaying(): boolean {
+        return this.player?.getPlayerState() === YT.PlayerState.PLAYING;
+    }
+
+    loadVideoByUrl(videoUrl: string): void {
+        // Set new videoId from youtube video url
+        const videoId = extractYouTubeId(videoUrl);
+        if (!videoId) return;
+
+        this.player?.loadVideoById(videoId, 0);
+    }
+
+
+    protected applyRemoteState({ videoUrl, currentTime, isPlaying }: VideoState, onComplete: () => void): void {
+        if (!this.player) return;
+
+        // Set new videoId from youtube video url
+        const videoId = extractYouTubeId(videoUrl);
+        if (!videoId) return;
+
+        // If video changed
+        if (this.player.getVideoData()?.video_id !== videoId) {
+            this.player.loadVideoById(videoId, currentTime);
+            return;
+        }
+
+        const drift = Math.abs(this.getCurrentTime() - currentTime);
+        if (drift > this.driftThreshold) this.seek(currentTime);
+
+        if (isPlaying && this.player.getPlayerState() !== YT.PlayerState.PLAYING) this.play();
+        else if (!isPlaying && this.player.getPlayerState() !== YT.PlayerState.PAUSED) this.pause();
+
+        onComplete();
+    };
+
+    private onPlayerReady = () => {
+        // Join room
+        if (!socket.connected) {
+            socket.connect();
+            socket.once("connect", () => {
+                socket.emit("video:join", { roomId: this.roomId });
+            });
+        } else {
+            socket.emit("video:join", { roomId: this.roomId });
+        }
+    };
+
+    private onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+        if (this.isApplyingRemote) {
+            this.isApplyingRemote = false;
+        }
+
+        const time = this.getCurrentTime();
+        if (event.data === YT.PlayerState.PLAYING) socket.emit("video:play", { roomId: this.roomId, time });
+        else if (event.data === YT.PlayerState.PAUSED) socket.emit("video:pause", { roomId: this.roomId, time });
     };
 }
