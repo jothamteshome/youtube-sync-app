@@ -28,11 +28,14 @@ function joinRoom(socket: Socket, roomId: string) {
     return;
   }
 
+  const oldLastUpdate = state.lastUpdate;
+  const elapsed = state.isPlaying ? (Date.now() - oldLastUpdate) / 1000 : 0;
+
   // Construct new state
   const newState: RoomState = {
     eventId: state.eventId,
     videoUrl: state?.videoUrl,
-    currentTime: state.currentTime + (Date.now() - state.lastUpdate) / 1000,
+    currentTime: state.currentTime + elapsed,
     isPlaying: state.isPlaying,
     lastUpdate: Date.now()
   };
@@ -134,8 +137,6 @@ function handlePauseVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   // Ignore sync events if the eventId is less than or equal to what is known to the server
   if (room.eventId > eventId) return;
 
-  const oldLastUpdate = room.lastUpdate;
-
   // Update room's state on server
   room.eventId++;
   room.currentTime = time;
@@ -143,16 +144,9 @@ function handlePauseVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   room.lastUpdate = Date.now();
 
 
-  // compute currentTime as of now
-  const currentTimeNow = room.currentTime + (Date.now() - oldLastUpdate) / 1000;
-
-
   console.log(`Broadcasting video:pause in room ${roomId} at time ${time}`);
   console.log(room);
-  io.to(roomId).emit("video:sync", {
-    ...room,
-    currentTime: currentTimeNow
-  });
+  io.to(roomId).emit("video:sync", room);
 }
 
 
@@ -175,24 +169,15 @@ function handleSeekVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   // Ignore sync events if the eventId is less than or equal to what is known to the server
   if (room.eventId > eventId) return;
 
-  const oldLastUpdate = room.lastUpdate;
 
   // Update room's state on server
   room.eventId++;
   room.currentTime = time;
   room.lastUpdate = Date.now();
 
-
-  // compute currentTime as of now
-  const currentTimeNow = room.currentTime + (Date.now() - oldLastUpdate) / 1000;
-
-
   console.log(`Broadcasting video:seek in room ${roomId} at time ${time}`);
   console.log(room);
-  io.to(roomId).emit("video:sync", {
-    ...room,
-    currentTime: currentTimeNow
-  });
+  io.to(roomId).emit("video:sync", room);
 }
 
 
