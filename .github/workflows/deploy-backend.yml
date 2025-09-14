@@ -23,7 +23,7 @@ jobs:
         command_id=$(aws ssm send-command \
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
-          --parameters '{"commands":["sudo -u ubuntu bash -c '\''tmux kill-server 2>/dev/null || true'\''"]}' \
+          --parameters '{"commands":["sudo -u ec2-user bash -c '\''tmux kill-server 2>/dev/null || true'\''"]}' \
           --comment "Kill old tmux sessions" \
           --query 'Command.CommandId' \
           --output text)
@@ -55,8 +55,8 @@ jobs:
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
-            "sudo -u ubuntu bash -c '\''mkdir -p /home/ubuntu/watch-together'\''",
-            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together && git config --global --add safe.directory /home/ubuntu/watch-together && git checkout main && git pull origin main'\''"
+            "sudo -u ec2-user bash -c '\''mkdir -p /home/ec2-user/watch-together'\''",
+            "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together && git config --global --add safe.directory /home/ec2-user/watch-together && git checkout main && git pull origin main'\''"
           ]}' \
           --comment "Update code" \
           --query 'Command.CommandId' \
@@ -89,8 +89,8 @@ jobs:
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
-            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && touch .env && echo PORT=4000 > .env'\''",
-            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && npm install && npm run build'\''"
+            "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together/backend && touch .env && echo PORT=4000 > .env'\''",
+            "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together/backend && npm install && npm run build'\''"
           ]}' \
           --comment "Install dependencies and build" \
           --query 'Command.CommandId' \
@@ -123,8 +123,8 @@ jobs:
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
-            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && tmux new-session -d -s watch-together-backend'\''",
-            "sudo -u ubuntu bash -c '\''tmux send-keys -t watch-together-backend \"npm run start\" C-m'\''"
+            "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together/backend && tmux new-session -d -s watch-together-backend'\''",
+            "sudo -u ec2-user bash -c '\''tmux send-keys -t watch-together-backend \"npm run start\" C-m'\''"
           ]}' \
           --comment "Start server in tmux" \
           --query 'Command.CommandId' \
