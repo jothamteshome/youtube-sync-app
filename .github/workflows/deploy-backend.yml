@@ -1,0 +1,151 @@
+name: Deploy backend to EC2 via AWS SSM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+
+    - name: Kill all tmux sessions
+      run: |
+        command_id=$(aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":["sudo -u ubuntu bash -c '\''tmux kill-server 2>/dev/null || true'\''"]}' \
+          --comment "Kill old tmux sessions" \
+          --query 'Command.CommandId' \
+          --output text)
+        echo "command_id=$command_id" >> $GITHUB_ENV
+
+    
+    - name: Wait for `Kill all tmux sessions` to complete
+      run: |
+        while true; do
+          status=$(aws ssm list-command-invocations \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "CommandInvocations[0].Status" \
+            --output text)
+          echo "Status: $status"
+          if [[ "$status" == "Success" ]]; then
+            break
+          elif [[ "$status" == "Cancelled" || "$status" == "Failed" || "$status" == "TimedOut" ]]; then
+            echo "Command failed with status: $status"
+            exit 1
+          fi
+          sleep 5
+        done
+
+
+    - name: Pull latest code on EC2
+      run: |
+        command_id=$(aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":[
+            "sudo -u ubuntu bash -c '\''mkdir -p /home/ubuntu/watch-together'\''",
+            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together && git config --global --add safe.directory /home/ubuntu/watch-together && git checkout main && git pull origin main'\''"
+          ]}' \
+          --comment "Update code" \
+          --query 'Command.CommandId' \
+          --output text)
+        echo "command_id=$command_id" >> $GITHUB_ENV
+
+
+    - name: Wait for `Pull latest code on EC2` to complete
+      run: |
+        while true; do
+          status=$(aws ssm list-command-invocations \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "CommandInvocations[0].Status" \
+            --output text)
+          echo "Status: $status"
+          if [[ "$status" == "Success" ]]; then
+            break
+          elif [[ "$status" == "Cancelled" || "$status" == "Failed" || "$status" == "TimedOut" ]]; then
+            echo "Command failed with status: $status"
+            exit 1
+          fi
+          sleep 5
+        done
+
+
+    - name: Install dependencies & build
+      run: |
+        command_id=$(aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":[
+            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && touch .env && echo PORT=4000 > .env'\''",
+            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && npm install && npm run build'\''"
+          ]}' \
+          --comment "Install dependencies and build" \
+          --query 'Command.CommandId' \
+          --output text)
+        echo "command_id=$command_id" >> $GITHUB_ENV
+
+    
+    - name: Wait for `Install dependencies & build` to complete
+      run: |
+        while true; do
+          status=$(aws ssm list-command-invocations \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "CommandInvocations[0].Status" \
+            --output text)
+          echo "Status: $status"
+          if [[ "$status" == "Success" ]]; then
+            break
+          elif [[ "$status" == "Cancelled" || "$status" == "Failed" || "$status" == "TimedOut" ]]; then
+            echo "Command failed with status: $status"
+            exit 1
+          fi
+          sleep 5
+        done
+
+    
+    - name: Start tmux session and run server
+      run: |
+        command_id=$(aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":[
+            "sudo -u ubuntu bash -c '\''cd /home/ubuntu/watch-together/backend && tmux new-session -d -s watch-together-backend'\''",
+            "sudo -u ubuntu bash -c '\''tmux send-keys -t watch-together-backend \"npm run start\" C-m'\''"
+          ]}' \
+          --comment "Start server in tmux" \
+          --query 'Command.CommandId' \
+          --output text)
+        echo "command_id=$command_id" >> $GITHUB_ENV
+
+
+    - name: Wait for `Start tmux session and run server` to complete
+      run: |
+        while true; do
+          status=$(aws ssm list-command-invocations \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "CommandInvocations[0].Status" \
+            --output text)
+          echo "Status: $status"
+          if [[ "$status" == "Success" ]]; then
+            break
+          elif [[ "$status" == "Cancelled" || "$status" == "Failed" || "$status" == "TimedOut" ]]; then
+            echo "Command failed with status: $status"
+            exit 1
+          fi
+          sleep 5
+        done
