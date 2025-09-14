@@ -105,6 +105,8 @@ jobs:
             BUILD_DIR="./"
           fi
 
+          ls -a
+
           echo "Using build directory: $BUILD_DIR"
           aws s3 sync $BUILD_DIR s3://$BUCKET_NAME --delete \
             --exclude ".git/*" \
