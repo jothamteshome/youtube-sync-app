@@ -1,17 +1,26 @@
 import { socket } from "../services/socket";
 import { YoutubeManager } from "./YoutubeManager";
-import { extractYouTubeId } from "../utils/youtube";
-import { type VideoState } from "./BaseVideoManager";
+import { extractVideoId } from "../utils/extractVideoId";
+import { BaseVideoManager, type VideoState } from "./BaseVideoManager";
+
+type VideoService = "youtube";
 
 export class RoomManager {
   private roomId: string;
-  private youtubeManager: YoutubeManager | null = null;
+  private currentService?: VideoService;
+  private videoManagers: Record<VideoService, BaseVideoManager>;
 
   constructor(roomId: string) {
     this.roomId = roomId;
 
-    this.youtubeManager = new YoutubeManager(this.roomId);
-    this.youtubeManager.initPlayer("yt-player");
+
+    this.videoManagers = {
+      youtube: new YoutubeManager(this.roomId)
+    }
+
+    for (const [service, manager] of Object.entries(this.videoManagers)) {
+      manager.initPlayer(`${service}-player`);
+    }
 
     this.registerSocketEvents();
   }
@@ -22,19 +31,32 @@ export class RoomManager {
   }
 
   private sync(state: VideoState) {
-    this.youtubeManager?.sync(state);
+    const { service } = extractVideoId(state.videoUrl);
+    this.currentService = service as VideoService;
+
+    if (!this.currentService) {
+      alert(`${service} is an unsupported service`);
+      return;
+    }
+    
+    this.videoManagers[this.currentService].sync(state);
   }
 
 
   loadVideo(videoUrl: string) {
-    if (!this.youtubeManager) return;
-
-    const videoId = extractYouTubeId(videoUrl);
+    const { videoId, service } = extractVideoId(videoUrl);
 
     if (!videoId) {
-      alert("Invalid YouTube URL");
+      alert("Invalid URL");
       return;
     }
+
+    if (!service || !(service in this.videoManagers)) {
+      alert(`${service} is an unsupported service`);
+      return;
+    }
+
+    this.currentService = service as VideoService;
 
     socket.emit("video:set", { roomId: this.roomId, videoUrl });
   }
@@ -42,7 +64,6 @@ export class RoomManager {
   destroy() {
     socket.off("video:sync");
     socket.off("video:set");
-    this.youtubeManager?.destroy();
-    this.youtubeManager = null;
+    Object.values(this.videoManagers).forEach(manager => manager.destroy());
   }
 }

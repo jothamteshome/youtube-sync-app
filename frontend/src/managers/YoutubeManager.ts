@@ -1,5 +1,5 @@
 import { socket } from "../services/socket";
-import { extractYouTubeId } from "../utils/youtube";
+import { extractVideoId } from "../utils/extractVideoId";
 import { BaseVideoManager, type VideoState } from "./BaseVideoManager";
 
 declare global {
@@ -17,7 +17,7 @@ export class YoutubeManager extends BaseVideoManager {
         this.player = null;
     }
 
-    public initPlayer(containerId = "yt-player") {
+    public initPlayer(containerId = "youtube-player") {
         const init = () => {
             if (this.player) return;
 
@@ -58,7 +58,7 @@ export class YoutubeManager extends BaseVideoManager {
         this.eventId = eventId;
 
         // Set new videoId from youtube video url
-        const videoId = extractYouTubeId(videoUrl);
+        const { videoId } = extractVideoId(videoUrl);
         if (!videoId) return;
 
 

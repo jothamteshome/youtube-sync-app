@@ -17,6 +17,7 @@ export abstract class BaseVideoManager {
         this.roomId = roomId;
     }
 
+    public abstract destroy(): void;
     public abstract initPlayer(containerId: string): void;
     public abstract sync(state: VideoState): void;
     protected abstract syncHandler(state: VideoState): void;
