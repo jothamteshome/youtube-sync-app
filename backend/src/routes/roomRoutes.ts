@@ -16,6 +16,7 @@ router.post("/create-room", (req, res) => {
       videoUrl,
       currentTime: 0,
       isPlaying: false,
+      playbackRate: 1,
       lastUpdate: Date.now()
     }
   );

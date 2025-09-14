@@ -3,6 +3,7 @@ export interface RoomState {
   videoUrl: string | null;
   currentTime: number;
   isPlaying: boolean;
+  playbackRate: number;
   lastUpdate: number; // Date.now()
 }
 

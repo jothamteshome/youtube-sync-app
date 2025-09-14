@@ -40,6 +40,7 @@ function joinRoom(socket: Socket, roomId: string) {
     videoUrl: state?.videoUrl,
     currentTime: state.currentTime + elapsed,
     isPlaying: state.isPlaying,
+    playbackRate: state.playbackRate,
     lastUpdate: Date.now()
   };
 
@@ -70,6 +71,7 @@ function handleSetVideo(io: Server, { roomId, videoUrl }: { roomId: string, vide
       videoUrl,
       currentTime: 0,
       isPlaying: true,
+      playbackRate: 1,
       lastUpdate: Date.now()
     }
   );
@@ -86,7 +88,7 @@ function handleSetVideo(io: Server, { roomId, videoUrl }: { roomId: string, vide
  * @param videoEvent.roomId   The current roomId to handle events for
  * @param videoEvent.time     The timestamp to set the video to
  */
-function handlePlayVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
+function handlePlayVideo(io: Server, { roomId, time, playbackRate, eventId }: VideoEvent) {
   // Get the current room
   const room = rooms.get(roomId);
 
@@ -103,6 +105,7 @@ function handlePlayVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   room.eventId++;
   room.currentTime = time;
   room.isPlaying = true;
+  room.playbackRate = playbackRate;
   room.lastUpdate = Date.now();
 
   console.log(`Broadcasting video:play in room ${roomId} at time ${time}`);
@@ -117,7 +120,7 @@ function handlePlayVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
  * @param videoEvent.roomId   The current roomId to handle events for
  * @param videoEvent.time     The timestamp to set the video to
  */
-function handlePauseVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
+function handlePauseVideo(io: Server, { roomId, time, playbackRate, eventId }: VideoEvent) {
   // Get the current room
   const room = rooms.get(roomId);
 
@@ -134,6 +137,7 @@ function handlePauseVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   room.eventId++;
   room.currentTime = time;
   room.isPlaying = false;
+  room.playbackRate = playbackRate;
   room.lastUpdate = Date.now();
 
 
@@ -149,7 +153,7 @@ function handlePauseVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
  * @param videoEvent.roomId   The current roomId to handle events for
  * @param videoEvent.time     The timestamp to set the video to
  */
-function handleSeekVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
+function handleSeekVideo(io: Server, { roomId, time, playbackRate, eventId }: VideoEvent) {
   // Get the current room
   const room = rooms.get(roomId);
 
@@ -166,9 +170,36 @@ function handleSeekVideo(io: Server, { roomId, time, eventId }: VideoEvent) {
   // Update room's state on server
   room.eventId++;
   room.currentTime = time;
+  room.playbackRate = playbackRate;
   room.lastUpdate = Date.now();
 
   console.log(`Broadcasting video:seek in room ${roomId} at time ${time}`);
+  console.log(room);
+  io.to(roomId).emit("video:sync", room);
+}
+
+
+function handlePlaybackRate(io: Server, { roomId, time, playbackRate, eventId }: VideoEvent) {
+  // Get the current room
+  const room = rooms.get(roomId);
+
+  // If the room doesn't exist, return
+  if (!room) {
+    console.log(`Room with id ${roomId} does not exist`);
+    return;
+  }
+
+  // Ignore sync events if the eventId is less than or equal to what is known to the server
+  if (room.eventId > eventId) return;
+
+
+  // Update room's state on server
+  room.eventId++;
+  room.currentTime = time;
+  room.playbackRate = playbackRate;
+  room.lastUpdate = Date.now();
+
+  console.log(`Broadcasting video:playbackrate in room ${roomId} at time ${time}`);
   console.log(room);
   io.to(roomId).emit("video:sync", room);
 }
@@ -223,9 +254,10 @@ export default function socketEventHandler(io: Server, socket: Socket) {
 
   // Video events
   socket.on("video:set", ({ roomId, videoUrl }: { roomId: string, videoUrl: string }) => handleSetVideo(io, { roomId, videoUrl }));
-  socket.on("video:play", ({ roomId, time, eventId }: { roomId: string; time: number, eventId: number }) => handlePlayVideo(io, { roomId, time, eventId }));
-  socket.on("video:pause", ({ roomId, time, eventId }: { roomId: string; time: number, eventId: number }) => handlePauseVideo(io, { roomId, time, eventId }));
-  socket.on("video:seek", ({ roomId, time, eventId }: { roomId: string; time: number, eventId: number }) => handleSeekVideo(io, { roomId, time, eventId }));
+  socket.on("video:play", (event: VideoEvent) => handlePlayVideo(io, event));
+  socket.on("video:pause", (event: VideoEvent) => handlePauseVideo(io, event));
+  socket.on("video:seek", (event: VideoEvent) => handleSeekVideo(io, event));
+  socket.on("video:playbackrate", (event: VideoEvent) => handlePlaybackRate(io, event));
 
   // Disconnect
   socket.on("disconnect", () => disconnect(socket));

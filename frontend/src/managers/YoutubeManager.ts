@@ -48,7 +48,7 @@ export class YoutubeManager extends BaseVideoManager {
     }
     
 
-    protected syncHandler({ videoUrl, currentTime, isPlaying, eventId }: VideoState): void {
+    protected syncHandler({ videoUrl, currentTime, isPlaying, playbackRate, eventId }: VideoState): void {
         if (!this.player) return;
 
         // Ignore sync events if the eventId is less than or equal to what is known to the client
@@ -62,10 +62,15 @@ export class YoutubeManager extends BaseVideoManager {
         if (!videoId) return;
 
 
-        // Load new video if video has changed changed
+        // Load new video if video has changed
         if (this.player.getVideoData()?.video_id !== videoId) {
             this.player.loadVideoById(videoId, currentTime);
-            return;
+        }
+
+        
+        // Load new playback rate if it has changed
+        if (this.player.getPlaybackRate() !== playbackRate) {
+            this.player.setPlaybackRate(playbackRate);
         }
 
 
@@ -85,6 +90,20 @@ export class YoutubeManager extends BaseVideoManager {
     }
 
 
+    protected monitorPlaybackRate(): void {
+        setInterval(() => {
+            if (!this.player) return;
+            const currentRate = this.player.getPlaybackRate();
+
+            if (currentRate !== this.lastPlaybackRate) {
+                this.lastPlaybackRate = currentRate;
+
+                socket.emit("video:playbackrate", { roomId: this.roomId, time: this.player.getCurrentTime(), eventId: this.eventId, playbackRate: currentRate});
+            }
+        }, 200);
+    }
+
+
     private onPlayerReady = () => {
         // Join room
         if (!socket.connected) {
@@ -95,17 +114,20 @@ export class YoutubeManager extends BaseVideoManager {
         } else {
             socket.emit("video:join", { roomId: this.roomId });
         }
+
+        this.monitorPlaybackRate();
     }
 
 
     private onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
         const player = event.target;
         const time = player.getCurrentTime();
+        const playbackRate = player.getPlaybackRate();
 
         if (event.data === YT.PlayerState.PLAYING) {
-            socket.emit("video:play", { roomId: this.roomId, time, eventId: this.eventId });
+            socket.emit("video:play", { roomId: this.roomId, time, eventId: this.eventId, playbackRate });
         } else if (event.data === YT.PlayerState.PAUSED) {
-            socket.emit("video:pause", { roomId: this.roomId, time, eventId: this.eventId });
+            socket.emit("video:pause", { roomId: this.roomId, time, eventId: this.eventId, playbackRate });
         }
     }
 }
