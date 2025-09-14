@@ -47,7 +47,6 @@ jobs:
       
       - name: Build project
         working-directory: frontend
-        if: hashFiles('package-lock.json') != ''
         env:
           VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
         run: |
@@ -93,19 +92,7 @@ jobs:
       - name: Sync React build to S3
         working-directory: frontend
         run: |
-          if [ -d "build/client" ]; then
-            BUILD_DIR="build/client/"
-          elif [ -d "build" ]; then
-            BUILD_DIR="build/"
-          elif [ -d "dist" ]; then
-            BUILD_DIR="dist/"
-          elif [ -d ".next" ]; then
-            BUILD_DIR=".next/"
-          else
-            BUILD_DIR="./"
-          fi
-
-          ls -a
+          BUILD_DIR="dist/"
 
           echo "Using build directory: $BUILD_DIR"
           aws s3 sync $BUILD_DIR s3://$BUCKET_NAME --delete \
