@@ -1,6 +1,6 @@
-import { socket } from "../services/socket";
-import { extractVideoId } from "../utils/extractVideoId";
 import { BaseVideoManager, type VideoState } from "./BaseVideoManager";
+import { socket } from "../services/socket";
+import extractVideoId from "../utils/extractVideoId";
 
 declare global {
     interface Window {
@@ -9,7 +9,7 @@ declare global {
     }
 }
 
-export class YoutubeManager extends BaseVideoManager {
+export default class YoutubeManager extends BaseVideoManager {
     private player: YT.Player | null = null;
 
     destroy() {

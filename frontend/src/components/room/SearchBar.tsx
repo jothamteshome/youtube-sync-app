@@ -1,13 +1,20 @@
 import { Search } from "lucide-react";
 
+/** 
+ * Props for SearchBar component.
+ */
 type SearchBarProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClick: () => void;
 };
 
+
+/**
+ * Renders a search bar with an input field and a search button.
+ */
 export default function SearchBar({ onChange, onClick }: SearchBarProps) {
   return (
-    <div className="flex w-4/5 max-w-3xl border border-gray-300 rounded-full overflow-hidden shadow-sm mb-8">
+    <div className="flex w-4/5 min-h-10 max-w-3xl border border-gray-300 rounded-full overflow-hidden shadow-sm mb-8">
       <input
         type="text"
         placeholder="Search"

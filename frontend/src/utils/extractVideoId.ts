@@ -23,7 +23,7 @@ const extractYouTubeId = (parsed: URL): { videoId?: string, service: string } =>
 };
 
 
-export const extractVideoId = (url: string): { videoId?: string, service?: string } => {
+export default function extractVideoId (url: string): { videoId?: string, service?: string } {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
 
