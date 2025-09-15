@@ -18,6 +18,12 @@ jobs:
         aws-region: us-east-1
 
 
+    - name: Update SSM Parameters
+      run: |
+        aws ssm put-parameter --name "/watch-together/backend/youtube-api-key" --value "${{ secrets.YOUTUBE_API_KEY }}" --type "SecureString" --overwrite
+        aws ssm put-parameter --name "/watch-together/backend/port" --value "${{ secrets.BACKEND_PORT }}" --type "String" --overwrite
+
+
     - name: Kill all tmux sessions
       run: |
         command_id=$(aws ssm send-command \
@@ -89,7 +95,7 @@ jobs:
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
-            "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together/backend && touch .env && echo PORT=4000 > .env'\''",
+            "sudo -u ec2-user bash -c '\''source /etc/profile.d/load_ssm_env.sh'\''",
             "sudo -u ec2-user bash -c '\''cd /home/ec2-user/watch-together/backend && npm install && npm run build'\''"
           ]}' \
           --comment "Install dependencies and build" \
