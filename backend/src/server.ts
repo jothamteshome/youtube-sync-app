@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import roomRoutes from "./routes/roomRoutes.js";
+import youtubeApiRoutes from "./routes/youtubeApiRoutes.js"
 import socketEventHandler from "./sockets/eventHandler.js";
 import getFormattedDate from "./utils/date.js";
 import dotenv from 'dotenv';
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Routes
 app.use("/v1/rooms", roomRoutes);
+app.use("/v1/youtube-api", youtubeApiRoutes)
 app.get('/health', (req, res) => {
   console.log(`[${getFormattedDate()}] health check - OK`);
   res.status(200).send("OK");
