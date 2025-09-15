@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Info } from "lucide-react";
+import { BACKEND_URL } from "../../utils/backendUrl";
 
 export default function RoomInfo({ roomId }: { roomId: string }) {
   const [latency, setLatency] = useState<number | null>(null);
@@ -10,7 +11,7 @@ export default function RoomInfo({ roomId }: { roomId: string }) {
     const ping = async () => {
       const start = Date.now();
       try {
-        await fetch("/health");
+        await fetch(`${BACKEND_URL}/health`);
         setLatency(Date.now() - start);
       } catch {
         setLatency(null);
@@ -62,19 +63,21 @@ export default function RoomInfo({ roomId }: { roomId: string }) {
 
       {/* Info Box */}
       {show && (
-        <div className="absolute left-0 mt-2 w-64 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+        <div className="absolute left-0 mt-2 ml-2 w-56 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
           <div className="text-sm text-gray-700">
             <p className="font-semibold">Room:</p>
-            <p className="font-mono flex items-center justify-between">
+            <div className="flex w-full">
+              <p className="font-mono flex items-center w-4/5">
               {roomId}
+              </p>
+
               <button
                 onClick={handleCopy}
-                className={`ml-2 text-xs ${getCopyColor()} hover:underline cursor-pointer`}
+                className={`ml-2 text-xs ${getCopyColor()} hover:underline cursor-pointer w-1/5`}
               >
                 {copied ? "Copied!" : "Copy"}
               </button>
-            </p>
-
+            </div>
             <p className="mt-2 font-semibold">Latency:</p>
             <div className="flex items-center gap-2">
               <span
