@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { cachedVideoData, type VideoData, type ChannelData } from "../models/videoData.js";
+import { roomManager } from "../models/RoomManager.js";
+import type { VideoData, ChannelData } from "../interfaces/VideoData.js";
 
 const router = Router();
 
 
+/**  Generic function to fetch data from Youtube Data API v3 */
 async function fetchFromYoutube<T>(endpoint: string, params: Record<string, string>): Promise<T> {
     // Get Youtube Data API v3 API Key
     const apiKey = process.env.YOUTUBE_API_KEY;
@@ -21,6 +23,7 @@ async function fetchFromYoutube<T>(endpoint: string, params: Record<string, stri
 }
 
 
+/**  Get channel data from Youtube Data API v3 */
 const getChannelData = async (channelId: string): Promise<ChannelData> => {
     // Get data from channels endpoint
     const data = await fetchFromYoutube<any>("channels", {
@@ -43,6 +46,7 @@ const getChannelData = async (channelId: string): Promise<ChannelData> => {
 };
 
 
+/** Get  video data from Youtube Data API v3 */
 const getVideoData = async (videoId: string): Promise<VideoData> => {
     // Get data from videos endpoint
     const data = await fetchFromYoutube<any>("videos", {
@@ -73,11 +77,13 @@ const getVideoData = async (videoId: string): Promise<VideoData> => {
     return videoData;
 }
 
+
+/** Route to get video data from Youtube Data API v3 */
 router.get("/video/:videoId", async (req, res) => {
     const { videoId } = req.params;
 
-    if (cachedVideoData.has(videoId)) {
-        res.json(cachedVideoData.get(videoId));
+    if (roomManager.cachedVideoData.has(videoId)) {
+        res.json(roomManager.cachedVideoData.get(videoId));
         return;
     }
 
@@ -86,11 +92,11 @@ router.get("/video/:videoId", async (req, res) => {
         const videoData: VideoData = await getVideoData(videoId);
 
         // Update cache with new video data
-        cachedVideoData.set(videoId, videoData);
+        roomManager.cachedVideoData.set(videoId, videoData);
 
         // Set a timeout to delete the cached video data after 1 hour
         setTimeout(() => {
-            cachedVideoData.delete(videoId);
+            roomManager.cachedVideoData.delete(videoId);
         }, 1000 * 60 * 60)
 
         res.json(videoData);
@@ -100,5 +106,6 @@ router.get("/video/:videoId", async (req, res) => {
     }
 
 });
+
 
 export default router;

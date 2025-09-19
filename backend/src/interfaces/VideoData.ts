@@ -1,3 +1,4 @@
+/** Interface for video information pulled from Youtube Data API v3 */
 export interface VideoData {
   videoDescription: string;
   videoLikeCount: number;
@@ -9,15 +10,13 @@ export interface VideoData {
   channelTitle: string;
   channelUrl: string;
   subscriberCount: number;
-}
+};
 
 
+/** Interface for channel information pulled from Youtube Data API v3 */
 export interface ChannelData {
   channelIcon: string,
   channelTitle: string,
   channelUrl: string,
   subscriberCount: number
-}
-
-
-export const cachedVideoData: Map<string, VideoData> = new Map<string, VideoData>();
+};

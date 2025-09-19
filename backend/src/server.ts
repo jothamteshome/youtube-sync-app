@@ -1,12 +1,16 @@
+import cors from 'cors';
+import dotenv from 'dotenv';
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import roomRoutes from "./routes/roomRoutes.js";
 import youtubeApiRoutes from "./routes/youtubeApiRoutes.js"
-import socketEventHandler from "./sockets/eventHandler.js";
+import registerConnectionEventHandlers from './sockets/connectionEventHandlers.js';
+import { registerQueueEventHandlers } from './sockets/queueEventHandlers.js';
+import { registerVideoEventHandlers } from './sockets/videoEventHandlers.js';
 import getFormattedDate from "./utils/date.js";
-import dotenv from 'dotenv';
-import cors from 'cors';
+
+
 dotenv.config();
 
 const app = express();
@@ -32,7 +36,11 @@ app.get('/health', (req, res) => {
 
 
 // Socket.IO events
-io.on("connection", (socket) => { socketEventHandler(io, socket); });
+io.on("connection", (socket) => { 
+  registerConnectionEventHandlers(io, socket);
+  registerVideoEventHandlers(io, socket);
+  registerQueueEventHandlers(io, socket);
+});
 
 const PORT = process.env.PORT;
 
