@@ -1,4 +1,5 @@
-import { BaseVideoManager, type VideoState } from "./BaseVideoManager";
+import { BaseVideoManager } from "./BaseVideoManager";
+import { type VideoState } from "../interfaces/States";
 import { socket } from "../services/socket";
 import extractVideoId from "../utils/extractVideoId";
 
@@ -65,6 +66,7 @@ export default class YoutubeManager extends BaseVideoManager {
         // Load new video if video has changed
         if (this.player.getVideoData()?.video_id !== videoId) {
             this.player.loadVideoById(videoId, currentTime);
+            this.videoLoaded = true;
         }
 
         
@@ -109,10 +111,10 @@ export default class YoutubeManager extends BaseVideoManager {
         if (!socket.connected) {
             socket.connect();
             socket.once("connect", () => {
-                socket.emit("video:join", { roomId: this.roomId });
+                socket.emit("room:join", { roomId: this.roomId });
             });
         } else {
-            socket.emit("video:join", { roomId: this.roomId });
+            socket.emit("room:join", { roomId: this.roomId });
         }
 
         this.monitorPlaybackRate();
@@ -128,6 +130,9 @@ export default class YoutubeManager extends BaseVideoManager {
             socket.emit("video:play", { roomId: this.roomId, time, eventId: this.eventId, playbackRate });
         } else if (event.data === YT.PlayerState.PAUSED) {
             socket.emit("video:pause", { roomId: this.roomId, time, eventId: this.eventId, playbackRate });
+        } else if (event.data === YT.PlayerState.ENDED) {
+            this.videoLoaded = false;
+            this.onVideoEnd();
         }
     }
 }

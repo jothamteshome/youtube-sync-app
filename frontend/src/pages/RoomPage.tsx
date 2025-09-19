@@ -37,10 +37,10 @@ export default function RoomPage() {
   }, [roomId]);
 
 
-  const handleLoadVideo = () => {
+  const queueVideo = () => {
     if (!roomId || !roomManagerRef.current) return;
 
-    roomManagerRef.current.loadVideo(url);
+    roomManagerRef.current.queueVideo(url);
   };
 
 
@@ -51,7 +51,7 @@ export default function RoomPage() {
 
       <SearchBar
         onChange={(e: ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
-        onClick={handleLoadVideo}
+        onClick={queueVideo}
       />
 
       <YoutubeVideo videoData={videoData} />
