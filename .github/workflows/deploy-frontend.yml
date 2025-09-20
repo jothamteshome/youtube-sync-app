@@ -50,7 +50,8 @@ jobs:
         env:
           VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
         run: |
-          npm ci
+          rm -rf node_modules package-lock.json
+          npm install
           npm run build
 
 
