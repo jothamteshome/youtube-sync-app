@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 import { roomManager } from "../models/RoomManager.js";
 import getFormattedDate from "../utils/date.js";
 
@@ -8,7 +8,7 @@ const router = Router();
 /** Route to create a new room on the server  */
 router.post("/create-room", (req, res) => {
   console.log(`[${getFormattedDate()}] creating room`);
-  const roomId = uuidv4();
+  const roomId = nanoid(8);
 
   roomManager.createRoom(roomId);
 
