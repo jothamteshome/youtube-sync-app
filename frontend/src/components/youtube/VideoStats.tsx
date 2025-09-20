@@ -27,14 +27,14 @@ interface VideoStatsProps {
  */
 function VideoLikes({ videoLikeCount }: VideoLikesProps) {
     return (
-        <div className="w-36 flex h-10 bg-neutral-700 items-center rounded-full">
-            <button className="w-2/3 flex items-center h-full hover:bg-neutral-600 rounded-l-full cursor-not-allowed">
-                <ThumbsUp className="ml-2"></ThumbsUp>
-                <p className="m-auto font-bold">{formatCount(videoLikeCount)}</p>
+        <div className="flex h-9 bg-neutral-800 items-center rounded-full">
+            <button className="flex items-center h-full hover:bg-neutral-700 rounded-l-full cursor-not-allowed">
+                <ThumbsUp className="ml-2 size-5 stroke-1"></ThumbsUp>
+                <p className="mx-2 font-medium text-[0.925rem]">{formatCount(videoLikeCount, 0)}</p>
             </button>
-            <div className="w-px h-6 bg-gray-400"></div>
-            <button className="w-1/3 flex items-center justify-center h-full hover:bg-neutral-600 rounded-r-full cursor-not-allowed">
-                <ThumbsDown className="mr-2"></ThumbsDown>
+            <div className="w-px h-6 bg-gray-400" />
+            <button className="flex items-center justify-center h-full hover:bg-neutral-700 rounded-r-full cursor-not-allowed">
+                <ThumbsDown className="mx-2 size-5 stroke-1" />
             </button>
         </div>
     );
@@ -46,7 +46,7 @@ function VideoLikes({ videoLikeCount }: VideoLikesProps) {
  */
 export default function VideoStats({ videoLikeCount, channelIcon, channelTitle, channelUrl, subscriberCount }: VideoStatsProps) {
     return (
-        <div className="flex items-center justify-between flex-wrap mt-2">
+        <div className="flex items-center justify-between flex-wrap mt-1">
             <ChannelInfo channelIcon={channelIcon} channelTitle={channelTitle} channelUrl={channelUrl} subscriberCount={subscriberCount} />
             <VideoLikes videoLikeCount={videoLikeCount} />
         </div>

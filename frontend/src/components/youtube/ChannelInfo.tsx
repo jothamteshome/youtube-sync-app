@@ -34,7 +34,7 @@ interface ChannelInfoProps {
  */
 function ChannelIcon({ channelIcon }: ChannelIconProps) {
     return (
-        <div className="aspect-square">
+        <div className="aspect-square max-h-10">
             <img className="rounded-full" src={channelIcon} />
         </div>
     );
@@ -48,9 +48,9 @@ function ChannelTitle({ channelTitle, subscriberCount }: ChannelTitleProps) {
     const subscriberText = subscriberCount === 1 ? "subscriber" : "subscribers";
 
     return (
-        <div className="w-4/5 flex flex-col ml-2">
-            <h1 className="font-bold text-lg">{channelTitle}</h1>
-            <p className="text-xs text-neutral-400 font-light">{`${formatCount(subscriberCount)} ${subscriberText}`}</p>
+        <div className="flex flex-col ml-2">
+            <h1 className="font-bold">{channelTitle}</h1>
+            <p className="text-xs text-neutral-400 font-light">{`${formatCount(subscriberCount, 1)} ${subscriberText}`}</p>
         </div>
     );
 }
@@ -61,7 +61,7 @@ function ChannelTitle({ channelTitle, subscriberCount }: ChannelTitleProps) {
  */
 export default function ChannelInfo({ channelIcon, channelTitle, channelUrl, subscriberCount }: ChannelInfoProps) {
     return (
-        <a className="flex max-w-64 h-12" href={channelUrl}>
+        <a className="flex items-center h-12" href={channelUrl}>
             <ChannelIcon channelIcon={channelIcon} />
             <ChannelTitle channelTitle={channelTitle!} subscriberCount={subscriberCount!} />
         </a>

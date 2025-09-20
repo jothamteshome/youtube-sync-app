@@ -38,7 +38,7 @@ function DescriptionStats({ videoPublishedAt, videoViewCount }: DescriptionStats
 
     return (
         <div className="flex">
-            <p className="font-bold text-sm">{`${formatCount(videoViewCount)} ${viewsText}`}</p>
+            <p className="font-bold text-sm">{`${formatCount(videoViewCount, 1)} ${viewsText}`}</p>
             <p className="font-bold text-sm ml-2">{formatYoutubeDate(videoPublishedAt)}</p>
         </div>
     );
@@ -81,7 +81,7 @@ export default function VideoDescription({ maxChars = 200, videoDescription, vid
     const videoDescriptionText = expanded || !isLong ? videoDescription : videoDescription?.slice(0, maxChars) + "...";
 
     return (
-        <div className="flex flex-col rounded-xl bg-neutral-700 mt-2 p-4">
+        <div className="flex flex-col rounded-xl bg-neutral-800 mt-2 p-4">
             <DescriptionStats videoPublishedAt={videoPublishedAt!} videoViewCount={videoViewCount!} />
             <VideoDescriptionText videoDescription={videoDescriptionText} />
             {
