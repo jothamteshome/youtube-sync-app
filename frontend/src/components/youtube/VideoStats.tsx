@@ -30,7 +30,7 @@ function VideoLikes({ videoLikeCount }: VideoLikesProps) {
         <div className="flex h-9 bg-neutral-800 items-center rounded-full">
             <button className="flex items-center h-full hover:bg-neutral-700 rounded-l-full cursor-not-allowed">
                 <ThumbsUp className="ml-2 size-5 stroke-1"></ThumbsUp>
-                <p className="mx-2 font-medium text-[0.925rem]">{formatCount(videoLikeCount, 0)}</p>
+                <p className="mx-2 font-medium text-[0.925rem]">{formatCount(videoLikeCount ?? 0, 0)}</p>
             </button>
             <div className="w-px h-6 bg-gray-400" />
             <button className="flex items-center justify-center h-full hover:bg-neutral-700 rounded-r-full cursor-not-allowed">

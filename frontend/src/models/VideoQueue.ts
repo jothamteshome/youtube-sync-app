@@ -38,4 +38,9 @@ export default class Queue {
     }
 
 
+    public getQueue(): string[] {
+        return [ ...this.items ];
+    };
+
+
 }

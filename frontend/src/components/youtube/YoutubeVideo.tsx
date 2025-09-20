@@ -1,4 +1,3 @@
-
 import type VideoData from "../../models/VideoData";
 import VideoInfo from "../youtube/VideoInfo";
 import VideoDescription from "../youtube/VideoDescription";

@@ -1,4 +1,5 @@
 import aspectRatio from '@tailwindcss/aspect-ratio'
+import lineClamp from '@tailwindcss/line-clamp'
 
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -7,5 +8,6 @@ export default {
   },
   plugins: [
     aspectRatio,
+    lineClamp
   ],
 }

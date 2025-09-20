@@ -56,9 +56,9 @@ function VideoDescriptionText({ videoDescription }: VideoDescriptionTextProps) {
 
     return (
         <div className="whitespace-pre-wrap">
-            {parts.map((part, i) =>
+            {parts.map((part: string, i: number) =>
                 part.match(urlRegex) ? (
-                    <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                    <a key={`${part}-${i}`} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                         {part}
                     </a>
                 ) : (

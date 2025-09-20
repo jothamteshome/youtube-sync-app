@@ -5,6 +5,7 @@ import RoomInfo from "../components/room/RoomInfo";
 import YoutubeVideo from "../components/youtube/YoutubeVideo";
 import RoomManager from "../managers/RoomManager";
 import type VideoData from "../models/VideoData";
+import Playlist from "../components/playlist/Playlist";
 
 
 export default function RoomPage() {
@@ -13,6 +14,8 @@ export default function RoomPage() {
   const roomManagerRef = useRef<RoomManager | null>(null);
   const [url, setUrl] = useState("");
   const [videoData, setVideoData] = useState<VideoData>();
+  const [playlistVideos, setPlaylistVideos] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(-1);
 
   useEffect(() => {
     if (!roomId) return;
@@ -31,7 +34,15 @@ export default function RoomPage() {
       }
     };
 
-    roomManagerRef.current = new RoomManager(roomId, onVideoChanged);
+
+    const onPlaylistUpdate = (videos: string[], index: number) => {
+      if (!roomId || !roomManagerRef.current) return;
+
+      setPlaylistVideos(videos);
+      setCurrentIndex(index);
+    };
+
+    roomManagerRef.current = new RoomManager(roomId, onVideoChanged, onPlaylistUpdate);
 
     return () => roomManagerRef.current?.destroy();
   }, [roomId]);
@@ -55,6 +66,11 @@ export default function RoomPage() {
       />
 
       <YoutubeVideo videoData={videoData} />
+
+      <div className="w-4/5 max-w-7xl flex">
+        <Playlist videos={playlistVideos} currentIndex={currentIndex} />
+      </div>
+      
     </div>
   );
 }

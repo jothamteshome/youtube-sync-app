@@ -19,6 +19,7 @@ export default class RoomManager {
     private currentService?: VideoService;
     private videoManagers: Record<VideoService, BaseVideoManager>;
     private onVideoChange: () => void;
+    private onPlaylistUpdate: (videos: string[], index: number) => void;
     private queueEventId = 0;
     private queue = new Queue();
 
@@ -28,9 +29,10 @@ export default class RoomManager {
      *
      * @param roomId - The unique identifier for the room.
      */
-    constructor(roomId: string, onVideoChange: () => void) {
+    constructor(roomId: string, onVideoChange: () => void, onPlaylistUpdate: (videos: string[], index: number) => void) {
         this.roomId = roomId;
         this.onVideoChange = onVideoChange;
+        this.onPlaylistUpdate = onPlaylistUpdate;
 
         this.videoManagers = {
             youtube: new YoutubeManager(this.roomId, this.onVideoEnd)
@@ -117,6 +119,8 @@ export default class RoomManager {
         if (!manager.isVideoLoaded()) {
             this.loadVideo(currentVideo);
         }
+
+        this.onPlaylistUpdate(this.queue.getQueue(), state.currentIndex);
     }
 
 
